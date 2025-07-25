@@ -1,4 +1,7 @@
--- Create the customers table
+-- Drop the customers table if it exists to ensure a clean start
+DROP TABLE IF EXISTS customers;
+
+-- Create a single customers table
 CREATE TABLE customers (
     customer_id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
