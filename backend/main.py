@@ -100,7 +100,8 @@ def process_query(request: QueryRequest):
         with engine.connect() as connection:
             result = connection.execute(sqlalchemy.text(sql_query))
             # Converts the database rows to a list of dictionaries for JSON compatibility.
-            results_as_dict = [row._asdict() for row in result.mappings()]
+            # This line has been corrected.
+            results_as_dict = [dict(row) for row in result.mappings()]
             return {"sql_query": sql_query, "results": results_as_dict}
 
     except Exception as e:
@@ -113,4 +114,3 @@ def read_root():
     Defines the root endpoint to confirm the server is running.
     """
     return {"message": "LLM SQL Chatbot is running"}
-
