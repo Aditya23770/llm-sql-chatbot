@@ -1,6 +1,7 @@
 import os
 import re
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
 from groq import Groq
@@ -11,6 +12,25 @@ load_dotenv()
 
 # Initializes the FastAPI application.
 app = FastAPI()
+
+# ====================================================================
+# CORS MIDDLEWARE CONFIGURATION
+# ====================================================================
+# This allows your React frontend (running on http://localhost:3000)
+# to communicate with your FastAPI backend.
+origins = [
+    "http://localhost:3000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+# ====================================================================
+
 
 # Initializes the Groq client using the API key from the environment variables.
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
@@ -100,7 +120,6 @@ def process_query(request: QueryRequest):
         with engine.connect() as connection:
             result = connection.execute(sqlalchemy.text(sql_query))
             # Converts the database rows to a list of dictionaries for JSON compatibility.
-            # This line has been corrected.
             results_as_dict = [dict(row) for row in result.mappings()]
             return {"sql_query": sql_query, "results": results_as_dict}
 
