@@ -1,59 +1,57 @@
 import React, { useState } from 'react';
 import './App.css';
 
+// IMPORTANT: In a real production app, this key should not be hardcoded.
+// It would typically be stored in an environment variable.
+const API_KEY = "MY_SUPER_SECRET_API_KEY";
+
 function App() {
-  // State variables to manage the component's data
   const [query, setQuery] = useState('');
   const [sqlQuery, setSqlQuery] = useState('');
   const [results, setResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Handles the form submission
   const handleSubmit = async (event) => {
-    event.preventDefault(); // Prevents the default form submission behavior
+    event.preventDefault();
     setIsLoading(true);
     setError('');
     setSqlQuery('');
     setResults([]);
 
     try {
-      // Sends a POST request to the FastAPI backend
+      // Sends a POST request to the FastAPI backend with the API key in the header.
       const response = await fetch('http://127.0.0.1:8000/query', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-API-Key': API_KEY, // Adds the API key to the request header
         },
         body: JSON.stringify({ query: query }),
       });
 
       if (!response.ok) {
-        // Handles HTTP errors from the backend
         const errorData = await response.json();
+        // Handles both regular errors and authentication errors
         throw new Error(errorData.detail || 'An unknown error occurred');
       }
 
-      // Parses the successful JSON response
       const data = await response.json();
       setSqlQuery(data.sql_query);
       setResults(data.results);
 
     } catch (err) {
-      // Catches network errors or errors thrown from the response handling
       setError(err.message);
     } finally {
-      // Ensures loading is set to false after the request is complete
       setIsLoading(false);
     }
   };
 
-  // Renders the results in a table format
   const renderTable = () => {
     if (results.length === 0) {
       return <p>No results found.</p>;
     }
 
-    // Gets the column headers from the first result object
     const headers = Object.keys(results[0]);
 
     return (

@@ -1,6 +1,7 @@
 import os
 import re
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends, Header
+from fastapi.security import APIKeyHeader
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
@@ -16,8 +17,6 @@ app = FastAPI()
 # ====================================================================
 # CORS MIDDLEWARE CONFIGURATION
 # ====================================================================
-# This allows your React frontend (running on http://localhost:3000)
-# to communicate with your FastAPI backend.
 origins = [
     "http://localhost:3000",
 ]
@@ -32,11 +31,30 @@ app.add_middleware(
 # ====================================================================
 
 
+# ====================================================================
+# API KEY SECURITY
+# ====================================================================
+# Retrieves the master API key from the environment variables.
+API_KEY = os.getenv("API_KEY")
+API_KEY_NAME = "X-API-Key" # The name of the header to check for the key
+
+# Defines the security scheme for API Key authentication.
+api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
+
+async def get_api_key(api_key: str = Depends(api_key_header)):
+    """
+    Dependency function to validate the API key from the request header.
+    """
+    if not api_key or api_key != API_KEY:
+        raise HTTPException(status_code=401, detail="Invalid or Missing API Key")
+    return api_key
+# ====================================================================
+
+
 # Initializes the Groq client using the API key from the environment variables.
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 # Defines the system prompt for the LLM.
-# This version is specifically for the simple, single-table schema.
 SYSTEM_PROMPT = """You are a specialized SQL Code Bot. Your single purpose is to convert a user's question into a single, clean, valid PostgreSQL query for the table provided below.
 
 ### PRIMARY DIRECTIVE
@@ -67,7 +85,6 @@ Your entire response must be only the raw SQL query.
 """
 
 # Establishes the connection to the PostgreSQL database.
-# The connection URL is retrieved from the environment variables.
 try:
     db_url = os.getenv("DB_URL")
     engine = sqlalchemy.create_engine(db_url)
@@ -76,22 +93,20 @@ except Exception as e:
     engine = None
 
 # Defines the data model for the incoming request body using Pydantic.
-# This ensures the request has a 'query' field of type string.
 class QueryRequest(BaseModel):
     query: str
 
-@app.post("/query")
+# Applies the API key dependency to the /query endpoint.
+@app.post("/query", dependencies=[Depends(get_api_key)])
 def process_query(request: QueryRequest):
     """
-    This endpoint receives a natural language query, converts it to SQL using the LLM,
-    executes the SQL against the database, and returns the result.
+    This endpoint is now protected. It will only execute if a valid API key
+    is provided in the 'X-API-Key' header.
     """
-    # Checks if the database connection was successfully established.
     if not engine:
         raise HTTPException(status_code=500, detail="Database connection not available")
 
     try:
-        # Step 1: Sends the user's query and the system prompt to the Groq API.
         chat_completion = client.chat.completions.create(
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
@@ -99,11 +114,8 @@ def process_query(request: QueryRequest):
             ],
             model="llama3-8b-8192",
         )
-        # Extracts the raw text response from the LLM.
         raw_response = chat_completion.choices[0].message.content.strip()
         
-        # Uses regex to find and extract only the SQL query from the response,
-        # making the system resilient to extra conversational text from the LLM.
         sql_match = re.search(r"SELECT.*?;", raw_response, re.DOTALL | re.IGNORECASE)
         
         if not sql_match:
@@ -112,24 +124,17 @@ def process_query(request: QueryRequest):
         sql_query = sql_match.group(0)
 
     except Exception as e:
-        # Handles potential failures in the LLM API call or response parsing.
         raise HTTPException(status_code=500, detail=f"Error calling LLM API or parsing response: {e}")
 
     try:
-        # Step 2: Executes the generated SQL query against the database.
         with engine.connect() as connection:
             result = connection.execute(sqlalchemy.text(sql_query))
-            # Converts the database rows to a list of dictionaries for JSON compatibility.
             results_as_dict = [dict(row) for row in result.mappings()]
             return {"sql_query": sql_query, "results": results_as_dict}
 
     except Exception as e:
-        # Handles errors during SQL execution, such as syntax errors in the generated query.
         raise HTTPException(status_code=400, detail=f"Error executing SQL query: {e}. Generated SQL was: {sql_query}")
 
 @app.get("/")
 def read_root():
-    """
-    Defines the root endpoint to confirm the server is running.
-    """
     return {"message": "LLM SQL Chatbot is running"}
