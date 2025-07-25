@@ -1,3 +1,13 @@
+# Environment variables
 .env
-.env
-.env
+
+# Python
+venv/
+__pycache__/
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# React
+frontend/node_modules
+frontend/build
