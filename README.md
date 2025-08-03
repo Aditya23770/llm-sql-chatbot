@@ -1,5 +1,5 @@
 
-# Try [Data-whisperer](https://llm-sql-chatbot.vercel.app/) chatbot.
+# Try [Data-whisperer](https://llm-sql-chatbot.vercel.app/) chatbot's UI.
 
 
 ## 1. Project Overview
