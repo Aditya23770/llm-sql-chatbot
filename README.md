@@ -1,5 +1,6 @@
 
-# LLM-Powered Chatbot with FastAPI and SQL Integration
+# Try [Data-whisperer](https://llm-sql-chatbot.vercel.app/) chatbot.
+
 
 ## 1. Project Overview
 
@@ -123,7 +124,7 @@ In **two separate terminals**:
 ```bash
 uvicorn backend.main:app --reload
 ```
-- URL: `http://127.0.0.1:8000`(but while using postman you for checking backend use `http://127.0.0.1:8000/query` )
+- URL: `http://127.0.0.1:8000`(but while using postman for checking backend use `http://127.0.0.1:8000/query` )
 
 
 ##### 🧪 Testing the Backend with Postman
