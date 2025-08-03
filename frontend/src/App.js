@@ -75,7 +75,7 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <h1>LLM-Powered SQL Chatbot</h1>
+        <h1>Data-Whisperer</h1>
         <p>Enter a natural language query about the customer database.</p>
       </header>
       <main>
