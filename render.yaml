@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: llm-sql-chatbot-backend
+    runtime: python
+    region: oregon
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11"
+      - key: LLM_PROVIDER
+        value: groq
+      - key: REDIS_DEFAULT_TTL_SECONDS
+        value: "3600"
+      - key: CHROMA_PERSIST_DIR
+        value: ./rag/chroma_db
+      - key: CHROMA_COLLECTION_NAME
+        value: schema_columns
+      - key: RAG_TOP_K
+        value: "5"
+      # Set these as secrets in the Render dashboard (not here):
+      # GROQ_API_KEY, OPENAI_API_KEY, ANTHROPIC_API_KEY, DB_URL, REDIS_URL, API_KEY

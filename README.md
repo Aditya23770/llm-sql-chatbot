@@ -1,234 +1,130 @@
+# Data-Whisperer — LLM SQL Chatbot
 
-# Try [Data-whisperer](https://llm-sql-chatbot.vercel.app/) chatbot's UI.
-
-
-## 1. Project Overview
-
-This is a full-stack web application built to fulfill the requirements of the **"LLM-Powered Chatbot with FastAPI and SQL Integration"** assignment. It enables users to query a PostgreSQL database using natural language.
-
-The application uses:
-- A **Groq-hosted LLM** (Llama 3) to convert natural language to SQL queries.
-- A **FastAPI** backend to handle API calls and query execution.
-- A **ReactJS** frontend for user interaction and display.
+Ask questions about your data in plain English. The app converts natural language into PostgreSQL queries using an LLM, executes them, and returns results.
 
 ---
 
-## 2. Application Screenshots
+## Architecture
 
-### Main User Interface  
-Users enter natural language queries here.  
-![Main UI](UI.png)
+```
+User (Streamlit UI)
+  └── POST /query ──► FastAPI backend (Render)
+                          ├── Redis (Upstash) — query result cache
+                          ├── ChromaDB (in-process) — RAG schema retrieval
+                          ├── LLM (Groq / OpenAI / Anthropic) — SQL generation
+                          └── PostgreSQL (Neon) — query execution
+```
 
-
-### Successful Query Response  
-Displays the generated SQL and retrieved results.  
-![Main UI](example_query.png)
-
-
----
-
-## 3. Requirements Checklist
-
-### ✅ Core Requirements
-- ✔️ **FastAPI Backend** for handling API requests.
-- ✔️ **ReactJS Frontend** for user-friendly input and output.(Although you can skip this part and use postman for checking the backend, instructions are below)
-- ✔️ **PostgreSQL Database** with schema: `(customer_id, name, gender, location)`.
-- ✔️ **Groq LLM Integration** using Llama 3 to generate SQL queries.
-- ✔️ **Sample Data**: Database seeded with 5+ entries.
-- ✔️ **End-to-End Functionality**: Full flow from user input → SQL → results.
-
-### ✅ Bonus Points Completed
-- ✔️ **Logging** of queries and generated SQL.
-- ✔️ **Error Handling** for invalid queries.
-- ✔️ **Environment Variables** for secure credentials.
-- ✔️ **API Security** via API key in request headers.
+**Request flow:**
+1. Check Redis cache (cache key = SHA256 of provider + query) — return immediately on hit
+2. ChromaDB semantic search → retrieve relevant column descriptions
+3. Build prompt: full schema + RAG columns + user query → LLM → raw SQL
+4. Execute SQL on PostgreSQL → return results + cache them
 
 ---
 
-## 4. System Architecture (Project Flow)
+## Tech Stack
 
-1. **User Input** → Natural language query in frontend.
-2. **API Request** → Sent to FastAPI backend with API key.
-3. **LLM Processing** → Groq LLM converts query to SQL.
-4. **SQL Execution** → Backend runs SQL on PostgreSQL.
-5. **Response** → Result sent back to frontend.
-6. **Display** → React displays formatted results to user.
-
----
-
-## 5. Tech Stack
-
-| Component     | Technology / Library                           |
-|---------------|-----------------------------------------------|
-| Backend       | Python 3, FastAPI, Uvicorn                    |
-| Frontend      | ReactJS, JavaScript (ES6+), HTML5, CSS3      |
-| Database      | PostgreSQL                                    |
-| LLM API       | Groq (Llama 3 Model)                          |
-| Python Libs   | SQLAlchemy, Psycopg2, python-dotenv, Groq     |
+| Layer | Technology |
+|---|---|
+| Backend | FastAPI, Python 3.11, Uvicorn |
+| Frontend | Streamlit |
+| Database | PostgreSQL (Neon.tech) |
+| Cache | Redis (Upstash) |
+| RAG / Vector store | ChromaDB + sentence-transformers (all-MiniLM-L6-v2) |
+| LLM providers | Groq (llama3-8b-8192), OpenAI (gpt-4o), Anthropic (claude-sonnet-4-6) |
 
 ---
 
-## 6. Project Setup and Execution
+## Project Structure
 
-### 🔧 Setup Instructions
+```
+llm-sql-chatbot/
+├── app/                    # FastAPI backend
+│   ├── api/routes/         # HTTP endpoints (health, query, admin)
+│   ├── clients/            # LLM, database, and cache adapters
+│   ├── core/               # Config, security, logging
+│   ├── models/             # Pydantic request/response schemas
+│   ├── prompts/            # SQL generation prompt template
+│   └── services/           # Business logic: query handler, RAG, SQL extractor
+├── ui/                     # Streamlit frontend
+├── rag/                    # schema_definitions.json (RAG source of truth)
+├── requirements.txt        # Backend dependencies
+├── render.yaml             # Render deploy config
+└── .env.example            # Environment variable template
+```
 
-#### 1. Clone the Repository
+---
+
+## Local Setup
+
+### 1. Clone and install
+
 ```bash
 git clone https://github.com/Aditya23770/llm-sql-chatbot
 cd llm-sql-chatbot
-```
-
-#### 2. Backend Setup
-```bash
-# Create virtual environment
-python -m venv venv
-source venv/Scripts/activate  # Windows
-# source venv/bin/activate    # macOS/Linux
-
-# Install dependencies
+python -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-#### Configure PostgreSQL
-- Start PostgreSQL server
-- Create a database (e.g., `chatbot_db`)
-- Create a user with privileges
-
-#### .env File
-Create `.env` in the project root with:
-```
-GROQ_API_KEY="your_groq_api_key"
-DB_URL="postgresql://your_user:your_password@localhost:5432/your_database"
-API_KEY="your_chosen_secret_api_key"
-```
-
-#### Initialize Database
-```bash
-psql -d your_database -U your_user -f schema.sql
-```
-
-#### 3. Frontend Setup
-```bash
-cd frontend
-npm install
-```
-
----
-
-### ▶️ Running the Application
-
-In **two separate terminals**:
-
-
-#### Terminal 1 – Start Backend
-```bash
-uvicorn backend.main:app --reload
-```
-- URL: `http://127.0.0.1:8000`(but while using postman for checking backend use `http://127.0.0.1:8000/query` )
-
-
-##### 🧪 Testing the Backend with Postman
-
-Follow the steps below to test the `/query` endpoint of your FastAPI backend using **Postman**.
-
----
-
-### ✅ Step 1: Start the Backend Server
-
-Ensure your FastAPI server is running:
+### 2. Configure environment
 
 ```bash
-uvicorn backend.main:app --reload
+cp .env.example .env
+# Fill in your keys in .env
 ```
 
-Server should be accessible at:  
-`http://127.0.0.1:8000`
+Required env vars (see `.env.example` for all options):
+- `GROQ_API_KEY` / `OPENAI_API_KEY` / `ANTHROPIC_API_KEY`
+- `DB_URL` — `postgresql+asyncpg://user:pass@host/db`
+- `REDIS_URL` — `redis://localhost:6379` or Upstash `rediss://...`
+- `API_KEY` — any secret string to protect the endpoints
+
+### 3. Run the backend
+
+```bash
+uvicorn app.main:app --reload
+# http://localhost:8000
+```
+
+ChromaDB schema ingestion runs automatically on first startup.
+
+### 4. Run the frontend
+
+```bash
+cd ui
+pip install -r requirements.txt
+BACKEND_URL=http://localhost:8000 API_KEY=your_key streamlit run app.py
+# http://localhost:8501
+```
 
 ---
 
-### 🛠️ Step 2: Open Postman and Create a New Request
+## API
 
-1. Open **Postman**.
-2. Click on **New → HTTP Request**.
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| GET | `/health` | — | Liveness check |
+| POST | `/query` | `X-API-Key` | Natural language → SQL → results |
+| POST | `/admin/reload-schema` | `X-API-Key` | Force ChromaDB re-ingestion |
 
----
-
-### 🌐 Step 3: Set Method and URL
-
-- **Method:** `POST`  
-- **URL:** `http://127.0.0.1:8000/query`
-
----
-
-### 🔐 Step 4: Configure Headers
-
-Navigate to the **Headers** tab and add the following key-value pair:
-
-| Key         | Value                     |
-|-------------|---------------------------|
-| `X-API-Key` | `your_secret_api_key_here` |
-
-> Replace `your_secret_api_key_here` with the value of `API_KEY` from your `.env` file.
-
----
-
-### 📝 Step 5: Configure Body
-
-1. Go to the **Body** tab.
-2. Select **raw**.
-3. Set the type to **JSON** from the dropdown.
-4. Enter your natural language query as JSON:
-
+**POST /query** example:
 ```json
-{
-  "query": "Show me all male customers from Delhi"
-}
+// Request
+{ "query": "Show me all female customers from Mumbai", "provider": "groq" }
+
+// Response
+{ "sql_query": "SELECT * FROM customers WHERE gender ILIKE 'female' AND location ILIKE 'mumbai';",
+  "results": [...], "cached": false, "provider": "groq" }
 ```
 
 ---
 
-### 🚀 Step 6: Send the Request
+## Deployment
 
-Click the **Send** button.  
-You should receive a JSON response containing:
-
-- The **generated SQL query**
-- The **results** returned from the database
-
----
-
-### ✅ Sample Response (Example)
-
-```json
-{
-  "sql": "SELECT * FROM customers WHERE gender = 'male' AND location = 'Delhi';",
-  "results": [
-    {
-      "customer_id": 1,
-      "name": "Raj Malhotra",
-      "gender": "male",
-      "location": "Delhi"
-    }
-  ]
-}
-```
-
----
-
-This confirms that your LLM, FastAPI backend, and database integration are working correctly!
-
-
-#### Terminal 2 – Start Frontend(if want an end-to-end setup)
-```bash
-cd frontend
-npm start
-```
-- Opens: `http://localhost:3000`
-
----
-
-## 7. Deliverables
-
-- ✅ FastAPI backend (`/backend`)
-- ✅ PostgreSQL schema (`schema.sql`)
-- ✅ ReactJS frontend (`/frontend`)
+| Service | Purpose | Free tier |
+|---|---|---|
+| Render.com | FastAPI backend | 512MB, auto-deploys from GitHub |
+| Streamlit Community Cloud | Streamlit UI | Free, points to `ui/app.py` |
+| Neon.tech | PostgreSQL | 0.5GB serverless Postgres |
+| Upstash | Redis cache | 10k commands/day |
