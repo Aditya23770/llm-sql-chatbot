@@ -92,9 +92,7 @@ ChromaDB schema ingestion runs automatically on first startup.
 ### 4. Run the frontend
 
 ```bash
-cd ui
-pip install -r requirements.txt
-BACKEND_URL=http://localhost:8000 API_KEY=your_key streamlit run app.py
+BACKEND_URL=http://localhost:8000 API_KEY=your_key streamlit run ui/app.py
 # http://localhost:8501
 ```
 

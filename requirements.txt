@@ -22,3 +22,8 @@ sentence-transformers>=3.0.0
 
 # Utilities
 python-dotenv>=1.0.0
+
+# Frontend (Streamlit UI)
+streamlit>=1.35.0
+requests>=2.32.0
+pandas>=2.2.0
