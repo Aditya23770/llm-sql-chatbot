@@ -7,7 +7,8 @@ class Settings(BaseSettings):
     groq_api_key: str = ""
     openai_api_key: str = ""
     anthropic_api_key: str = ""
-    llm_provider: str = "groq"  # "groq" | "openai" | "anthropic"
+    fireworks_api_key: str = ""
+    llm_provider: str = "groq"  # "groq" | "openai" | "anthropic" | "fireworks"
     llm_model: str = ""         # override per-provider default when set
 
     # Database

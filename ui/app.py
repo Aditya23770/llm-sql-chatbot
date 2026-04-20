@@ -13,7 +13,7 @@ except Exception:
     BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
     API_KEY = os.getenv("API_KEY", "")
 
-PROVIDERS = ["groq", "openai", "anthropic"]
+PROVIDERS = ["groq", "openai", "anthropic", "fireworks"]
 
 # ---------------------------------------------------------------------------
 # UI

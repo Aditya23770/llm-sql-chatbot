@@ -11,4 +11,7 @@ def get_llm_client(provider: str) -> LLMClient:
     if provider == "anthropic":
         from app.clients.llm.anthropic import AnthropicLLMClient
         return AnthropicLLMClient()
-    raise ValueError(f"Unknown LLM provider: {provider!r}. Choose groq | openai | anthropic")
+    if provider == "fireworks":
+        from app.clients.llm.fireworks import FireworksLLMClient
+        return FireworksLLMClient()
+    raise ValueError(f"Unknown LLM provider: {provider!r}. Choose groq | openai | anthropic | fireworks")
