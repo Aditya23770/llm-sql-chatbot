@@ -1,13 +1,55 @@
-# Environment variables
+# Environment variables (keep .env.example tracked)
 .env
+.env.local
+.env.production
+.env.staging
 
-# Python
+# Python artifacts
 venv/
-__pycache__/
+env/
+.venv/
+**/__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.coverage
+htmlcov/
 
-# Jupyter Notebook
+# Jupyter
 .ipynb_checkpoints/
+development.ipynb
+test.py
 
-# React
-frontend/node_modules
-frontend/build
+# ChromaDB generated index (rebuilt at startup from rag/schema_definitions.json)
+rag/chroma_db/
+
+# ML model cache (downloaded at runtime by sentence-transformers)
+.cache/
+models/
+*.bin
+*.safetensors
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# React (legacy — kept for git history)
+frontend/node_modules/
+frontend/build/
+frontend/.env.local
+frontend/.env.production
+
+# Render build cache
+.render-buildpack-cache/
+
+# Added by code-review-graph
+.code-review-graph/

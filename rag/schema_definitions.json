@@ -1,0 +1,34 @@
+[
+  {
+    "column_id": "customers.customer_id",
+    "table": "customers",
+    "column": "customer_id",
+    "type": "SERIAL PRIMARY KEY",
+    "description": "Unique auto-incrementing integer identifier for each customer record",
+    "example_values": ["1", "2", "3"]
+  },
+  {
+    "column_id": "customers.name",
+    "table": "customers",
+    "column": "name",
+    "type": "VARCHAR(255)",
+    "description": "Full name of the customer, use ILIKE with wildcards for partial name search, e.g. name ILIKE '%arjun%'",
+    "example_values": ["Aisha Khan", "Rohan Sharma", "Priya Singh"]
+  },
+  {
+    "column_id": "customers.gender",
+    "table": "customers",
+    "column": "gender",
+    "type": "VARCHAR(50)",
+    "description": "Gender of the customer, values are Male or Female, use ILIKE for case-insensitive comparison",
+    "example_values": ["Male", "Female"]
+  },
+  {
+    "column_id": "customers.location",
+    "table": "customers",
+    "column": "location",
+    "type": "VARCHAR(255)",
+    "description": "City where the customer lives, use ILIKE for case-insensitive comparison",
+    "example_values": ["Mumbai", "Delhi", "Bangalore", "Hyderabad", "Ahmedabad"]
+  }
+]
