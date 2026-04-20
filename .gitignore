@@ -42,11 +42,8 @@ Thumbs.db
 *.log
 logs/
 
-# React (legacy — kept for git history)
-frontend/node_modules/
-frontend/build/
-frontend/.env.local
-frontend/.env.production
+# Streamlit UI
+ui/.env.local
 
 # Render build cache
 .render-buildpack-cache/
