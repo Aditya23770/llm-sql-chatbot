@@ -1,14 +1,16 @@
 import logging
+from typing import Optional
 import chromadb
+from chromadb.api import ClientAPI
 from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
 from app.core.config import get_settings
 
 logger = logging.getLogger(__name__)
 
-_chroma_client: chromadb.PersistentClient | None = None
+_chroma_client: Optional[ClientAPI] = None
 
 
-def _get_client() -> chromadb.PersistentClient:
+def _get_client() -> ClientAPI:
     global _chroma_client
     if _chroma_client is None:
         s = get_settings()
