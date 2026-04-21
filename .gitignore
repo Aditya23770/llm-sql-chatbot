@@ -1,6 +1,6 @@
 # Environment variables (keep .env.example tracked)
 .env
-.env.local
+.env.local.example
 .env.production
 .env.staging
 
@@ -50,3 +50,5 @@ ui/.env.local
 
 # Added by code-review-graph
 .code-review-graph/
+.claude/
+

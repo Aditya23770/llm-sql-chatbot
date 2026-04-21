@@ -1,19 +1,23 @@
+import os
 import streamlit as st
 import requests
 import pandas as pd
+from dotenv import load_dotenv
+
+# Load .env when running locally (no-op on Streamlit Cloud where st.secrets is used)
+load_dotenv()
 
 # ---------------------------------------------------------------------------
-# Config — reads from st.secrets on Streamlit Cloud, falls back to env vars
+# Config — st.secrets on Streamlit Cloud, .env locally
 # ---------------------------------------------------------------------------
 try:
     BACKEND_URL = st.secrets["BACKEND_URL"]
     API_KEY = st.secrets["API_KEY"]
 except Exception:
-    import os
     BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
     API_KEY = os.getenv("API_KEY", "")
 
-PROVIDERS = ["groq", "openai", "anthropic", "fireworks"]
+PROVIDERS = ["fireworks", "groq", "openai", "anthropic"]
 
 # ---------------------------------------------------------------------------
 # UI
@@ -46,14 +50,10 @@ if submitted and user_query.strip():
             st.stop()
 
     if data.get("cached"):
-        st.info("Result served from cache")
-
-    st.subheader("Generated SQL")
-    st.code(data["sql_query"], language="sql")
+        st.caption("⚡ Cached result")
 
     results = data.get("results", [])
     if results:
-        st.subheader(f"Results ({len(results)} row{'s' if len(results) != 1 else ''})")
         st.dataframe(pd.DataFrame(results), use_container_width=True)
     else:
         st.warning("Query returned no results.")

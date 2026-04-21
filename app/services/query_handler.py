@@ -17,10 +17,13 @@ async def handle_query(
 ) -> QueryResponse:
     cache_key = CacheClient.make_key(query, provider)
 
-    cached = await cache.get(cache_key)
-    if cached:
-        logger.info("Cache hit for query: %r", query)
-        return QueryResponse(**cached, cached=True, provider=provider)
+    try:
+        cached = await cache.get(cache_key)
+        if cached:
+            logger.info("Cache hit for query: %r", query)
+            return QueryResponse(**cached, cached=True, provider=provider)
+    except Exception as exc:
+        logger.warning("Cache read failed (skipping): %s", exc)
 
     # RAG column retrieval — imported lazily so Phase 4 works without ChromaDB
     try:
@@ -44,7 +47,9 @@ async def handle_query(
 
     results = await db.get(sql_query)
 
-    payload = {"sql_query": sql_query, "results": results}
-    await cache.set(cache_key, payload)
+    try:
+        await cache.set(cache_key, {"sql_query": sql_query, "results": results})
+    except Exception as exc:
+        logger.warning("Cache write failed (skipping): %s", exc)
 
     return QueryResponse(sql_query=sql_query, results=results, cached=False, provider=provider)
